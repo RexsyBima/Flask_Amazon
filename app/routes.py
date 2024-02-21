@@ -1,7 +1,7 @@
 from flask import request
 from app import app, catalog
 from app.models import SQLProducts
-from app.functions import Items, Item, rating_star
+from app.functions import Items, Item, rating_star, get_pagination
 
 
 @app.route("/")  # ROUTE
@@ -11,8 +11,23 @@ def homepage():
 
 @app.route("/products")  # WIP
 def show_products():
-    items = Items(SQLProducts.query.slice(0, 5))
-    return catalog.render("DisplayProducts", title="Show Products", items=items)
+    p = request.args.get("page")  # p = page (halaman)
+    pagination = get_pagination(page=int(p) if p is not None else 1)
+    print(pagination)
+    items = Items(
+        SQLProducts.query.paginate(page=int(p) if p is not None else 1, per_page=10)
+    )
+    # if p is not None:
+    #    items = Items(SQLProducts.query.paginate(page=int(p), per_page=10))
+    # else:
+    #    items = Items(SQLProducts.query.paginate(page=1, per_page=10))
+    return catalog.render(
+        "DisplayProducts",
+        title="Show Products",
+        items=items,
+        pagination=pagination,
+        p=int(p),
+    )
 
 
 # @app.route("/item-<id>-<title>")

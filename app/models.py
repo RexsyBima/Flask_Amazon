@@ -21,6 +21,6 @@ class PYProducts(BaseModel):
     title: str
     price: float
     total_rating: int
-    rating: float
+    rating: float | list
     brand: str
     img_url: str

@@ -1,0 +1,15 @@
+{# def pagination, p #}
+
+<nav class="flex items-center justify-end border-t bg-gray-50 px-16 sm:px-0">
+  <div class="hidden md:-mt-px md:flex">
+    {% for i in pagination %}
+      {% if i == p %}
+    <a href="{{ url_for('show_products', page=i) }}" class="inline-flex items-center border-t-2 border-indigo-500 px-4 pt-4 text-sm font-medium text-indigo-600" aria-current="page">{{ i }}</a>
+      {% elif i == '...' %}
+    <span class="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500">...</span>
+      {% else %}
+    <a href="{{ url_for('show_products', page=i) }}" class="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">{{ i }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</nav>

@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float
 from pydantic import BaseModel
 from app import db
+from app import app
 
 
 class SQLProducts(db.Model):
@@ -13,6 +14,17 @@ class SQLProducts(db.Model):
     rating = Column(Float)
     brand = Column(String)
     img_url = Column(String)
+
+
+class Users(db.Model):
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True, nullable=False)
+    username = Column(String, unique=True, nullable=False)
+    password = Column(String, nullable=False)
+
+
+with app.app_context():
+    db.create_all()
 
 
 class PYProducts(BaseModel):

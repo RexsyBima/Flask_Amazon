@@ -1,13 +1,21 @@
 from flask import redirect, request, url_for
-from app import app, catalog, db, bcrypt
-from app.models import SQLProducts, Users
+from flask_login import login_user, current_user
+from app import app, catalog, db, bcrypt, login_manager
+from app.models import Comments, SQLProducts, Users
 from app.functions import Items, Item, rating_star, get_pagination
-from app.forms import RegisterForm
+from app.forms import CommentForm, LoginForm, RegisterForm
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.filter_by(id=user_id).first()
 
 
 @app.route("/")  # ROUTE
 @app.route("/home")
 def homepage():
+    print(current_user.is_authenticated)
+    print(current_user.email, current_user.username)
     return catalog.render("Home", title="Homepage")
 
 
@@ -33,15 +41,22 @@ def show_products():
 
 
 # @app.route("/item-<id>-<title>")
-@app.route("/item")
+@app.route("/item", methods=["GET", "POST"])
 def show_item():
     id = request.args.get("id")
+    form = CommentForm()
     if id is not None:
-        # title = request.args.get("title")
+        if form.validate_on_submit():
+            comment = Comments()
+            comment.username = current_user.username
+            comment.comment = form.comment
+            db.session.add(comment)
+            db.session.commit()
+            return redirect(url_for("show_item", id=id))
         item = Item(SQLProducts.query.filter_by(id=id).first())
         item.rating = rating_star(item.rating)
         print(item.rating)
-        return catalog.render("DisplayItem", title=item.title, item=item)
+        return catalog.render("DisplayItem", title=item.title, item=item, form=form)
     else:
         return {"item": "item not found"}
 
@@ -51,9 +66,23 @@ def about_page():
     return "this is about page"
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return "this is login page"
+    form = LoginForm()
+    if form.validate_on_submit():
+        user: Users = Users.query.filter_by(email=form.email.data).first()
+        check_pass = bcrypt.check_password_hash(user.password, form.password.data)
+        if check_pass:
+            print("successful login")
+            login_user(user)
+
+        """
+        1. jika email ada di database, maka ambil user itu
+        2. jika input password == password di database -> login
+        2a. gunakan fitur bcrypt untuk ngecek validasi password poin 2
+        """
+        return redirect(url_for("login"))
+    return catalog.render("Login", title="Login Page", form=form)
 
 
 @app.route("/register", methods=["GET", "POST"])
